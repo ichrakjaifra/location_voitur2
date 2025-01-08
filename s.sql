@@ -144,3 +144,84 @@ LEFT JOIN
     categories c ON v.categorie_id = c.id
 LEFT JOIN 
     evaluations e ON v.id = e.vehicule_id;
+
+
+
+CREATE TABLE themes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    description TEXT,
+    image_path VARCHAR(100)
+);
+
+
+CREATE TABLE articles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    contenu TEXT NOT NULL,
+    image_path VARCHAR(255),
+    video_path VARCHAR(255),
+    theme_id INT,
+    utilisateur_id INT,
+    date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    est_approuve BOOLEAN DEFAULT 0,
+    FOREIGN KEY (theme_id) REFERENCES themes(id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+);
+
+CREATE TABLE tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE article_tags (
+    article_id INT,
+    tag_id INT,
+    PRIMARY KEY (article_id, tag_id),
+    FOREIGN KEY (article_id) REFERENCES articles(id),
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
+);
+
+
+CREATE TABLE commentaires (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    article_id INT NOT NULL,
+    utilisateur_id INT NOT NULL,
+    contenu TEXT NOT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_modification TIMESTAMP NULL,
+    FOREIGN KEY (article_id) REFERENCES articles(id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+);
+
+
+CREATE TABLE favoris (
+    utilisateur_id INT,
+    article_id INT,
+    PRIMARY KEY (utilisateur_id, article_id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id),
+    FOREIGN KEY (article_id) REFERENCES articles(id)
+);
+
+
+-- Insérer des thèmes
+INSERT INTO themes (nom, image_path, description) VALUES ('SUV', 'images_voitures/suv.jpg', 'Véhicules utilitaires sport, adaptés pour la conduite hors route'), ('Berline', 'images_voitures/berline.jpg', 'Véhicules confortables pour la conduite sur route'), ('Coupé', 'images_voitures/coupe.jpg', 'Véhicules compacts avec un design sportif'), ('Camion', 'images_voitures/camion.png', 'Véhicules pour le transport de marchandises'), ('Monospace', 'images_voitures/monospace.png', 'Véhicules spacieux pour les familles et les groupes');
+
+-- Insérer des tags
+INSERT INTO tags (nom) VALUES
+('SUV'), ('Électrique'), ('Compacte'), ('Essence'), ('Sécurité');
+
+-- Insérer des articles
+INSERT INTO articles (titre, contenu, image_path, theme_id, utilisateur_id, est_approuve) VALUES
+('Guide des SUV électriques 2025', 'Découvrez les meilleurs modèles...', 'images/articles/suv.jpg', 1, 2, 1),
+('Conseils pour économiser le carburant', 'Voici comment réduire...', 'images/articles/carburant.jpg', 2, 3, 1);
+
+-- Associer des tags aux articles
+INSERT INTO article_tags (article_id, tag_id) VALUES
+(1, 1), (1, 2), (2, 4), (2, 5);
+
+-- Ajouter des commentaires
+INSERT INTO commentaires (article_id, utilisateur_id, contenu) VALUES
+(1, 3, 'Article très intéressant, merci pour les infos !'),
+(2, 2, 'Merci pour ces conseils utiles.');
+
