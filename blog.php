@@ -14,12 +14,26 @@ $themes = $db->fetchAll($sqlThemes);
 // Vérifier si un thème est sélectionné
 $themeId = isset($_GET['theme_id']) ? intval($_GET['theme_id']) : null;
 
-// Récupérer les articles du thème sélectionné
+// $articles = [];
+// if ($themeId) {
+//     $articles = Article::getArticlesByTheme($themeId, $conn);
+// }
+
+// Pagination
+$limit = 6; // Nombre d'articles par page
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($page - 1) * $limit;
+
+// Récupérer les articles par thème et avec pagination
 $articles = [];
 if ($themeId) {
-    // Utilisation de la méthode statique dans Article pour récupérer les articles
-    $articles = Article::getArticlesByTheme($themeId, $conn);
+    $articles = Article::getArticlesByThemeWithPagination($themeId, $conn, $limit, $offset);
 }
+
+// Récupérer le nombre total d'articles pour ce thème
+$totalArticles = Article::getTotalArticlesByTheme($themeId, $conn);
+$totalPages = ceil($totalArticles / $limit);
+
 ?>
 
 <html lang="en">
@@ -132,20 +146,8 @@ if ($themeId) {
     </div>
 </section>
 
-<!-- Barre de filtres et recherche -->
+<!-- Barre recherche -->
 <section class="mb-8 flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm">
-            <div class="flex items-center gap-4">
-                <select class="px-4 py-2 border rounded-lg">
-                    <option>Trier par date</option>
-                    <option>Plus récents</option>
-                    <option>Plus anciens</option>
-                </select>
-                <select class="px-4 py-2 border rounded-lg">
-                    <option>5 par page</option>
-                    <option>10 par page</option>
-                    <option>15 par page</option>
-                </select>
-            </div>
             <div class="relative">
                 <input type="search" placeholder="Rechercher un article..." 
                     class="pl-10 pr-4 py-2 border rounded-lg w-64">
@@ -191,6 +193,10 @@ if ($themeId) {
                         </div>
                         <time class="text-sm text-gray-500"><?= date("d M Y", strtotime($article['date_publication'])) ?></time>
                     </div>
+                    <a href="detail_article.php?id=<?= htmlspecialchars($article['id']) ?>"
+                       class="inline-block px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition">
+                        Learn More
+                    </a>
                 </div>
             </article>
         <?php endforeach; ?>
@@ -198,6 +204,32 @@ if ($themeId) {
         <p>Aucun article disponible pour ce thème.</p>
     <?php endif; ?>
 </section>
+
+<!-- Pagination -->
+
+        <nav class="mt-8 flex justify-center gap-2">
+    <!-- Previous Button -->
+    <?php if ($page > 1): ?>
+        <a href="?theme_id=<?= $themeId ?>&page=<?= $page - 1 ?>" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Précédent</a>
+    <?php else: ?>
+        <span class="px-4 py-2 border rounded-lg text-gray-400">Précédent</span>
+    <?php endif; ?>
+
+    <!-- Page Buttons -->
+    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+        <a href="?theme_id=<?= $themeId ?>&page=<?= $i ?>" 
+            class="px-4 py-2 border rounded-lg <?= $i == $page ? 'bg-blue-600 text-white' : 'hover:bg-gray-50' ?>"><?= $i ?></a>
+    <?php endfor; ?>
+
+    <!-- Next Button -->
+    <?php if ($page < $totalPages): ?>
+        <a href="?theme_id=<?= $themeId ?>&page=<?= $page + 1 ?>" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Suivant</a>
+    <?php else: ?>
+        <span class="px-4 py-2 border rounded-lg text-gray-400">Suivant</span>
+    <?php endif; ?>
+</nav>
+
+
 
 
         <!-- Formulaire d'ajout d'article -->
@@ -233,14 +265,7 @@ if ($themeId) {
 </div>
 
 
-        <!-- Pagination -->
-        <nav class="mt-8 flex justify-center gap-2">
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">Précédent</button>
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">1</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">2</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">3</button>
-            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">Suivant</button>
-        </nav>
+        
 
   </main>
 

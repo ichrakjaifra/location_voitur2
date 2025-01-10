@@ -60,6 +60,63 @@ class Article
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // public static function addArticle($article, $pdo)
+    // {
+    //     $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, image_path, video_path, theme_id, utilisateur_id, est_approuve) VALUES (:titre, :contenu, :imagePath, :videoPath, :themeId, :utilisateurId, :estApprouve)");
+    //     $stmt->bindParam(':titre', $article->titre, PDO::PARAM_STR);
+    //     $stmt->bindParam(':contenu', $article->contenu, PDO::PARAM_STR);
+    //     $stmt->bindParam(':imagePath', $article->imagePath, PDO::PARAM_STR);
+    //     $stmt->bindParam(':videoPath', $article->videoPath, PDO::PARAM_STR);
+    //     $stmt->bindParam(':themeId', $article->themeId, PDO::PARAM_INT);
+    //     $stmt->bindParam(':utilisateurId', $article->utilisateurId, PDO::PARAM_INT);
+    //     $stmt->bindParam(':estApprouve', $article->estApprouve, PDO::PARAM_BOOL);
+    //     $stmt->execute();
+    //     return $pdo->lastInsertId();
+    // }
+
+    // public static function deleteArticle($id, $pdo)
+    // {
+    //     $stmt = $pdo->prepare("DELETE FROM articles WHERE id = :id");
+    //     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    //     return $stmt->execute();
+    // }
+
+    // public static function updateArticle($article, $pdo)
+    // {
+    //     $stmt = $pdo->prepare("UPDATE articles SET titre = :titre, contenu = :contenu, image_path = :imagePath, video_path = :videoPath, theme_id = :themeId, utilisateur_id = :utilisateurId, est_approuve = :estApprouve WHERE id = :id");
+    //     $stmt->bindParam(':id', $article->id, PDO::PARAM_INT);
+    //     $stmt->bindParam(':titre', $article->titre, PDO::PARAM_STR);
+    //     $stmt->bindParam(':contenu', $article->contenu, PDO::PARAM_STR);
+    //     $stmt->bindParam(':imagePath', $article->imagePath, PDO::PARAM_STR);
+    //     $stmt->bindParam(':videoPath', $article->videoPath, PDO::PARAM_STR);
+    //     $stmt->bindParam(':themeId', $article->themeId, PDO::PARAM_INT);
+    //     $stmt->bindParam(':utilisateurId', $article->utilisateurId, PDO::PARAM_INT);
+    //     $stmt->bindParam(':estApprouve', $article->estApprouve, PDO::PARAM_BOOL);
+    //     return $stmt->execute();
+    // }
+
+    // Récupérer les articles d'un thème avec pagination
+    public static function getArticlesByThemeWithPagination($themeId, $pdo, $limit, $offset)
+    {
+        $stmt = $pdo->prepare("SELECT * FROM articles WHERE theme_id = :themeId LIMIT :limit OFFSET :offset");
+        $stmt->bindParam(':themeId', $themeId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Récupérer le nombre total d'articles pour un thème
+    public static function getTotalArticlesByTheme($themeId, $pdo)
+    {
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS total FROM articles WHERE theme_id = :themeId");
+        $stmt->bindParam(':themeId', $themeId, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'];
+    }
+
+    // Autres méthodes pour ajouter, supprimer, et mettre à jour des articles
     public static function addArticle($article, $pdo)
     {
         $stmt = $pdo->prepare("INSERT INTO articles (titre, contenu, image_path, video_path, theme_id, utilisateur_id, est_approuve) VALUES (:titre, :contenu, :imagePath, :videoPath, :themeId, :utilisateurId, :estApprouve)");
@@ -94,6 +151,7 @@ class Article
         $stmt->bindParam(':estApprouve', $article->estApprouve, PDO::PARAM_BOOL);
         return $stmt->execute();
     }
+
 }
 
 ?>

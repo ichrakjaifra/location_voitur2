@@ -113,6 +113,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <i class="fas fa-comments text-lg"></i>
             <span class="font-medium">Avis Clients</span>
         </a>
+
+        <a href="addthemes.php" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
+            <i class="fas fa-palette text-lg"></i>
+            <span class="font-medium">Themes</span>
+        </a>
+        
         <a href="#" class="flex items-center space-x-4 px-6 py-4 hover:bg-white hover:bg-opacity-10 rounded-xl">
             <i class="fas fa-cog text-lg"></i>
             <span class="font-medium">Settings</span>
