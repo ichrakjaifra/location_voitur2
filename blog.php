@@ -1,16 +1,27 @@
 <?php
-// Include the Database class
+// Inclure la classe Article et Database
+require_once 'Article.php';
 require_once 'Database.php';
 
-// Instantiate the Database class and connect to the database
-$database = new Database();
-$pdo = $database->connect(); // This creates the PDO connection
+// Initialiser la connexion à la base de données
+$db = new Database();
+$conn = $db->connect();
 
-// Fetch themes from the database
-$query = "SELECT * FROM themes";
-$stmt = $pdo->query($query);
-$themes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Récupérer les thèmes
+$sqlThemes = "SELECT id, nom FROM themes";
+$themes = $db->fetchAll($sqlThemes);
+
+// Vérifier si un thème est sélectionné
+$themeId = isset($_GET['theme_id']) ? intval($_GET['theme_id']) : null;
+
+// Récupérer les articles du thème sélectionné
+$articles = [];
+if ($themeId) {
+    // Utilisation de la méthode statique dans Article pour récupérer les articles
+    $articles = Article::getArticlesByTheme($themeId, $conn);
+}
 ?>
+
 <html lang="en">
 
 <head>
@@ -40,7 +51,7 @@ $themes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 </head>
 
-<body>
+<body class="bg-gray-100">
 
 <!-- 
     - #HEADER
@@ -107,89 +118,137 @@ $themes = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </header>
 
 
-  <!-- 
-        - #HERO
-      -->
-
-      <section class="section hero" id="home">
-        <div class="container">
-
-          <div class="hero-content">
-            <h2 class="h1 hero-title">The easy way to takeover a lease</h2>
-
-            <p class="hero-text">
-              Live in New York, New Jerset and Connecticut!
-            </p>
-          </div>
-
-          <div class="hero-banner"></div>
-
-          <form action="" class="hero-form">
-
-            <div class="input-wrapper">
-              <label for="input-1" class="input-label">Car, model, or brand</label>
-
-              <input type="text" name="car-model" id="input-1" class="input-field"
-                placeholder="What car are you looking?">
-            </div>
-
-            <div class="input-wrapper">
-              <label for="input-2" class="input-label">Max. monthly payment</label>
-
-              <input type="text" name="monthly-pay" id="input-2" class="input-field" placeholder="Add an amount in $">
-            </div>
-
-            <div class="input-wrapper">
-              <label for="input-3" class="input-label">Make Year</label>
-
-              <input type="text" name="year" id="input-3" class="input-field" placeholder="Add a minimal make year">
-            </div>
-
-            <button type="submit" class="btn">Search</button>
-
-          </form>
-
-        </div>
-      </section>
-
-
-
-      <section class="section blog" id="blog">
-    <div class="container">
-        <h2 class="h2 section-title">Our Blog</h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <?php foreach ($themes as $theme): ?>
-            <div class="blog-card bg-white shadow-lg rounded-lg overflow-hidden">
-                <figure class="card-banner">
-                    <a href="articles_par_theme.php?theme_id=<?php echo $theme['id']; ?>">
-                        <img src="<?php echo htmlspecialchars($theme['image_path']); ?>" alt="<?php echo htmlspecialchars($theme['nom']); ?>" loading="lazy" class="w-full h-48 object-cover">
-                    </a>
-                </figure>
-
-                <div class="card-content p-4">
-                    <h3 class="h3 card-title text-xl font-semibold">
-                        <a href="articles_par_theme.php?theme_id=<?php echo $theme['id']; ?>" class="text-gray-800"><?php echo htmlspecialchars($theme['nom']); ?></a>
-                    </h3>
-                    <p class="text-gray-600 mt-2"><?php echo htmlspecialchars($theme['description']); ?></p>
-
-                    <div class="card-meta flex justify-between items-center mt-4">
-                        <a href="articles_par_theme.php?theme_id=<?php echo $theme['id']; ?>" class="btn text-sm text-blue-500">Voir l'article</a>
-                        <!-- <a href="sign_in.php?redirect=' . urlencode("articles_par_theme.php?theme_id=" . $theme['id']) . '" class="btn text-sm text-blue-500">Voir l'article</a> -->
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Affichage des thèmes -->
+        <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-6">Explorez par thème</h2>
+    <div class="flex flex-wrap gap-4">
+        <?php foreach ($themes as $theme): ?>
+            <a href="?theme_id=<?= $theme['id'] ?>"
+               class="px-6 py-3 text-white rounded-full hover:bg-blue-700 transition-colors" style="background-color:hsl(204, 91%, 53%);">
+                <?= htmlspecialchars($theme['nom']) ?>
+            </a>
+        <?php endforeach; ?>
     </div>
 </section>
 
+<!-- Barre de filtres et recherche -->
+<section class="mb-8 flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm">
+            <div class="flex items-center gap-4">
+                <select class="px-4 py-2 border rounded-lg">
+                    <option>Trier par date</option>
+                    <option>Plus récents</option>
+                    <option>Plus anciens</option>
+                </select>
+                <select class="px-4 py-2 border rounded-lg">
+                    <option>5 par page</option>
+                    <option>10 par page</option>
+                    <option>15 par page</option>
+                </select>
+            </div>
+            <div class="relative">
+                <input type="search" placeholder="Rechercher un article..." 
+                    class="pl-10 pr-4 py-2 border rounded-lg w-64">
+                <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Grille d'articles -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <?php if ($articles): ?>
+        <?php foreach ($articles as $article): ?>
+            <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <?php if ($article['image_path']): ?>
+                    <img src="<?= htmlspecialchars($article['image_path']) ?>" alt="Article thumbnail"
+                         class="w-full h-48 object-cover">
+                <?php else: ?>
+                    <img src="/api/placeholder/800/400" alt="Image placeholder" class="w-full h-48 object-cover">
+                <?php endif; ?>
+                <div class="p-6">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <!-- Affichage des thèmes associés à l'article (par exemple) -->
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"><?= htmlspecialchars($theme['nom']) ?></span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2"><?= htmlspecialchars($article['titre']) ?></h3>
+                    <p class="text-gray-600 mb-4"><?= nl2br(htmlspecialchars($article['contenu'])) ?></p>
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="flex items-center gap-4">
+                            <!-- Icônes de statistiques (par exemple, vues et commentaires) -->
+                            <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                                245
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                32
+                            </span>
+                        </div>
+                        <time class="text-sm text-gray-500"><?= date("d M Y", strtotime($article['date_publication'])) ?></time>
+                    </div>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p>Aucun article disponible pour ce thème.</p>
+    <?php endif; ?>
+</section>
 
 
-      
+        <!-- Formulaire d'ajout d'article -->
+        <div class="mt-10">
+    <h2 class="text-2xl font-semibold mb-4">Ajouter un article</h2>
+    <form action="ajouter_article.php" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow">
+        <div class="mb-4">
+            <label for="titre" class="block text-gray-700">Titre :</label>
+            <input type="text" id="titre" name="titre" required class="w-full px-3 py-2 border rounded">
+        </div>
+        <div class="mb-4">
+            <label for="contenu" class="block text-gray-700">Contenu :</label>
+            <textarea id="contenu" name="contenu" rows="4" required class="w-full px-3 py-2 border rounded"></textarea>
+        </div>
+        <div class="mb-4">
+            <label for="theme_id" class="block text-gray-700">Thème :</label>
+            <select id="theme_id" name="theme_id" required class="w-full px-3 py-2 border rounded">
+                <?php foreach ($themes as $theme): ?>
+                    <option value="<?= $theme['id'] ?>"><?= htmlspecialchars($theme['nom']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="tags" class="block text-gray-700">Tags (séparés par des virgules) :</label>
+            <input type="text" id="tags" name="tags" class="w-full px-3 py-2 border rounded" placeholder="Tag1, Tag2, Tag3">
+        </div>
+        <div class="mb-4">
+            <label for="image" class="block text-gray-700">Image :</label>
+            <input type="file" id="image" name="image" class="w-full px-3 py-2 border rounded">
+        </div>
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Ajouter</button>
+    </form>
+</div>
 
 
-      <footer class="footer">
+        <!-- Pagination -->
+        <nav class="mt-8 flex justify-center gap-2">
+            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">Précédent</button>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">1</button>
+            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">2</button>
+            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">3</button>
+            <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">Suivant</button>
+        </nav>
+
+  </main>
+
+<!-- 
+    - #FOOTER
+  -->
+
+  <footer class="footer">
     <div class="container">
 
       <div class="footer-top">
